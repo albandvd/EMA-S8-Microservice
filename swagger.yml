@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Flight Booking API
+  description: API de gestion des compagnies aériennes, vols et billets.
+  version: 1.0.0
+
+tags:
+  - name: Airlines
+    description: Gestion des compagnies aériennes
+  - name: Flights
+    description: Gestion des vols
+  - name: Tickets
+    description: Gestion des billets
+
+paths:
+  # ─────────────────────────────────────────
+  # AIRLINES
+  # ─────────────────────────────────────────
+  /airlines:
+    get:
+      tags: [Airlines]
+      summary: Liste toutes les compagnies aériennes
+      responses:
+        "200":
+          description: Liste des compagnies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Airline"
+    post:
+      tags: [Airlines]
+      summary: Crée une nouvelle compagnie aérienne
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AirlineInput"
+      responses:
+        "201":
+          description: Compagnie créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Airline"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /airlines/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      tags: [Airlines]
+      summary: Récupère une compagnie par son ID
+      responses:
+        "200":
+          description: Compagnie trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Airline"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Airlines]
+      summary: Met à jour une compagnie aérienne
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AirlineInput"
+      responses:
+        "200":
+          description: Compagnie mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Airline"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Airlines]
+      summary: Supprime une compagnie aérienne
+      responses:
+        "204":
+          description: Compagnie supprimée
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────
+  # FLIGHTS
+  # ─────────────────────────────────────────
+  /flights:
+    get:
+      tags: [Flights]
+      summary: Liste tous les vols
+      parameters:
+        - name: airline_id
+          in: query
+          description: Filtre par ID de compagnie
+          schema:
+            type: integer
+        - name: date
+          in: query
+          description: Filtre par date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Liste des vols
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Flight"
+    post:
+      tags: [Flights]
+      summary: Crée un nouveau vol
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlightInput"
+      responses:
+        "201":
+          description: Vol créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flight"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /flights/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      tags: [Flights]
+      summary: Récupère un vol par son ID
+      responses:
+        "200":
+          description: Vol trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flight"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Flights]
+      summary: Met à jour un vol
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlightInput"
+      responses:
+        "200":
+          description: Vol mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flight"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Flights]
+      summary: Supprime un vol
+      responses:
+        "204":
+          description: Vol supprimé
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ─────────────────────────────────────────
+  # TICKETS
+  # ─────────────────────────────────────────
+  /tickets:
+    get:
+      tags: [Tickets]
+      summary: Liste tous les billets
+      parameters:
+        - name: flight_id
+          in: query
+          description: Filtre par ID de vol
+          schema:
+            type: integer
+        - name: class
+          in: query
+          description: Filtre par classe
+          schema:
+            $ref: "#/components/schemas/TicketClass"
+      responses:
+        "200":
+          description: Liste des billets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+    post:
+      tags: [Tickets]
+      summary: Crée un nouveau billet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Billet créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /tickets/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      tags: [Tickets]
+      summary: Récupère un billet par son ID
+      responses:
+        "200":
+          description: Billet trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Tickets]
+      summary: Met à jour un billet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "200":
+          description: Billet mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Tickets]
+      summary: Supprime un billet
+      responses:
+        "204":
+          description: Billet supprimé
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ─────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────
+components:
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      description: Identifiant numérique de la ressource
+      schema:
+        type: integer
+        example: 1
+
+  responses:
+    BadRequest:
+      description: Requête invalide
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+
+    # ── Airline ──────────────────────────
+    Airline:
+      type: object
+      description: Compagnie aérienne
+      required:
+        - id
+        - name
+        - nationality
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique
+          example: 1
+        name:
+          type: string
+          minLength: 3
+          description: Nom de la compagnie
+          example: "Air France"
+        nationality:
+          type: string
+          description: Code pays ISO 3166-1 alpha-2
+          minLength: 2
+          maxLength: 2
+          example: "FR"
+
+    AirlineInput:
+      type: object
+      description: Données pour créer ou mettre à jour une compagnie
+      required:
+        - name
+        - nationality
+      properties:
+        name:
+          type: string
+          minLength: 3
+          example: "Air France"
+        nationality:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: "FR"
+
+    # ── Flight ───────────────────────────
+    Flight:
+      type: object
+      description: Vol
+      required:
+        - id
+        - airline
+        - departure
+        - arrival
+        - date
+      properties:
+        id:
+          type: integer
+          example: 10
+        airline:
+          $ref: "#/components/schemas/Airline"
+        departure:
+          type: string
+          description: Code IATA de l'aéroport de départ
+          minLength: 3
+          maxLength: 3
+          example: "CDG"
+        arrival:
+          type: string
+          description: Code IATA de l'aéroport d'arrivée
+          minLength: 3
+          maxLength: 3
+          example: "JFK"
+        date:
+          type: string
+          format: date-time
+          description: Date et heure de départ (UTC)
+          example: "2024-07-14T10:30:00Z"
+
+    FlightInput:
+      type: object
+      description: Données pour créer ou mettre à jour un vol
+      required:
+        - airline_id
+        - departure
+        - arrival
+        - date
+      properties:
+        airline_id:
+          type: integer
+          description: ID de la compagnie aérienne
+          example: 1
+        departure:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: "CDG"
+        arrival:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: "JFK"
+        date:
+          type: string
+          format: date-time
+          example: "2024-07-14T10:30:00Z"
+
+    # ── Ticket ───────────────────────────
+    TicketClass:
+      type: string
+      description: Classe du billet
+      enum:
+        - economy
+        - business
+        - first
+      example: "economy"
+
+    Ticket:
+      type: object
+      description: Billet d'avion
+      required:
+        - id
+        - flight
+        - price
+        - class
+        - seat
+        - name
+      properties:
+        id:
+          type: integer
+          example: 100
+        flight:
+          $ref: "#/components/schemas/Flight"
+        price:
+          type: number
+          format: float
+          description: Prix du billet en euros
+          minimum: 0
+          example: 349.99
+        class:
+          $ref: "#/components/schemas/TicketClass"
+        seat:
+          type: string
+          description: Numéro de siège
+          pattern: "^[0-9]{1,3}[A-F]$"
+          example: "14A"
+        name:
+          type: string
+          description: Nom du passager
+          minLength: 2
+          example: "Jean Dupont"
+
+    TicketInput:
+      type: object
+      description: Données pour créer ou mettre à jour un billet
+      required:
+        - flight_id
+        - price
+        - class
+        - seat
+        - name
+      properties:
+        flight_id:
+          type: integer
+          example: 10
+        price:
+          type: number
+          format: float
+          minimum: 0
+          example: 349.99
+        class:
+          $ref: "#/components/schemas/TicketClass"
+        seat:
+          type: string
+          pattern: "^[0-9]{1,3}[A-F]$"
+          example: "14A"
+        name:
+          type: string
+          minLength: 2
+          example: "Jean Dupont"
+
+    # ── Error ────────────────────────────
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: "Ressource introuvable"
