@@ -104,20 +104,34 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
         {user ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                color: 'white'
-              }}>
-                {user.given_name?.[0] || user.name?.[0] || 'U'}
-              </div>
+              {user.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt={user.name} 
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }} 
+                />
+              ) : (
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  color: 'white'
+                }}>
+                  {user.given_name?.[0] || user.name?.[0] || 'U'}
+                </div>
+              )}
               <div style={{ overflow: 'hidden' }}>
                 <h4 style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                   {user.name}
@@ -170,8 +184,23 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
               onClick={onLogin}
               style={{ padding: '8px 12px', fontSize: '0.85rem', width: '100%', gap: '6px' }}
             >
-              <LogIn size={14} /> Connexion OIDC
+              <LogIn size={14} /> Connexion OIDC (Simulé)
             </button>
+
+            <a 
+              className="btn btn-accent" 
+              href="http://localhost:3000/auth/discord/login"
+              style={{ 
+                padding: '8px 12px', 
+                fontSize: '0.85rem', 
+                width: '100%', 
+                gap: '6px', 
+                textDecoration: 'none', 
+                color: 'var(--text-dark)' 
+              }}
+            >
+              <LogIn size={14} /> Connexion Discord
+            </a>
           </>
         )}
       </div>

@@ -94,6 +94,29 @@ export default function App() {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // Parse query parameters from Discord OAuth redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
+    const email = params.get('email');
+    const avatar = params.get('avatar');
+    const provider = params.get('provider');
+
+    if (name) {
+      setUser({
+        name,
+        email: email || 'Non partagé',
+        avatar: avatar || null,
+        provider: provider || 'Discord',
+        given_name: name.split(' ')[0]
+      });
+      showNotification(`Connecté avec succès via ${provider || 'Discord'} !`);
+      
+      // Clean up parameters in address bar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Dev Console request logging
   const logApiRequest = (method, url, headers, status, statusText, data) => {
     setApiLogs(prev => [
