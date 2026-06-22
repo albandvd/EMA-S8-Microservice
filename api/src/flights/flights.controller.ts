@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Delete, HttpCode, ParseIntPipe, Query } from '@nestjs/common';
 import { FlightsService } from './flights.service';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
@@ -13,22 +13,29 @@ export class FlightsController {
   }
 
   @Get()
-  findAll() {
-    return this.flightsService.findAll();
+  findAll(
+    @Query('airline_id') airlineId?: string,
+    @Query('date') date?: string,
+  ) {
+    return this.flightsService.findAll(
+      airlineId !== undefined ? parseInt(airlineId, 10) : undefined,
+      date,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.flightsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.flightsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFlightDto: UpdateFlightDto) {
-    return this.flightsService.update(+id, updateFlightDto);
+  @Put(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateFlightDto: UpdateFlightDto) {
+    return this.flightsService.update(id, updateFlightDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.flightsService.remove(+id);
+  @HttpCode(204)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.flightsService.remove(id);
   }
 }
