@@ -1,1 +1,4 @@
-export class CreateAirlineDto {}
+export class CreateAirlineDto {
+  name: string;
+  nationality: string;
+}
