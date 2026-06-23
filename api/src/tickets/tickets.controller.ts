@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Body, Param, Delete, HttpCode, ParseIntPipe
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
-import { TicketClass } from './entities/ticket.entity';
+import type { TicketClass } from './entities/ticket.entity';
 
 @Controller('tickets')
 export class TicketsController {
