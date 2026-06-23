@@ -23,9 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      audience:
-        configService.get<string>('KEYCLOAK_CLIENT_ID') ?? 'aeroflow-api',
+      audience: ['aeroflow-api', 'aeroflow-web'],
       issuer: `${keycloakUrl}/realms/${realm}`,
 
       secretOrKeyProvider: passportJwtSecret({
