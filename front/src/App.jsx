@@ -6,7 +6,6 @@ import FlightSearch from "./components/FlightSearch";
 import MyBookings from "./components/MyBookings";
 import DevConsole from "./components/DevConsole";
 
-// Track Keycloak initialization configuration to avoid concurrent double-initialization in React 18 Strict Mode
 let lastInitializedSettings = "";
 
 export default function App() {
@@ -367,7 +366,10 @@ export default function App() {
 			);
 
 			if (response.ok) {
-				showNotification("Test API réussi : accès autorisé (200 OK) !", "success");
+				showNotification(
+					"Test API réussi : accès autorisé (200 OK) !",
+					"success",
+				);
 			} else {
 				showNotification(
 					`Test API échoué : ${response.status} ${response.statusText}`,
