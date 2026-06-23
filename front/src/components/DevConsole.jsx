@@ -16,6 +16,7 @@ export default function DevConsole({
 	simulatedJwt,
 	apiLogs,
 	onClearLogs,
+	onTestApi,
 }) {
 	const [tokenInput, setTokenInput] = useState(simulatedJwt || "");
 	const [jwtParts, setJwtParts] = useState({
@@ -149,44 +150,6 @@ export default function DevConsole({
 						Configuration des Services
 					</h3>
 
-					{/* API Mode Selector */}
-					<div className='form-group'>
-						<label className='form-label'>Mode d'API REST</label>
-						<div style={{ display: "flex", gap: "10px" }}>
-							<button
-								type='button'
-								className={`btn ${devSettings.apiMode === "mock" ? "btn-primary" : "btn-secondary"}`}
-								style={{ flex: 1, padding: "10px" }}
-								onClick={() =>
-									setDevSettings((prev) => ({ ...prev, apiMode: "mock" }))
-								}
-							>
-								Simulé (Mocké)
-							</button>
-							<button
-								type='button'
-								className={`btn ${devSettings.apiMode === "live" ? "btn-accent" : "btn-secondary"}`}
-								style={{ flex: 1, padding: "10px" }}
-								onClick={() =>
-									setDevSettings((prev) => ({ ...prev, apiMode: "live" }))
-								}
-							>
-								Connecté (Live REST)
-							</button>
-						</div>
-						<p
-							style={{
-								fontSize: "0.75rem",
-								color: "var(--text-muted)",
-								marginTop: "6px",
-							}}
-						>
-							{devSettings.apiMode === "mock"
-								? "L'application utilise des données locales statiques (aucun backend requis)."
-								: "L'application tente d'envoyer des requêtes réelles à l'URL configurée ci-dessous."}
-						</p>
-					</div>
-
 					{/* Endpoint Input */}
 					<div className='form-group'>
 						<label className='form-label'>URL Base de l'API REST Backend</label>
@@ -197,19 +160,27 @@ export default function DevConsole({
 							onChange={(e) =>
 								setDevSettings((prev) => ({ ...prev, apiUrl: e.target.value }))
 							}
-							disabled={devSettings.apiMode === "mock"}
-							placeholder='http://localhost:8080/java-rest-server/api'
+							placeholder='http://localhost:3000'
 						/>
 						<p
 							style={{
 								fontSize: "0.75rem",
 								color: "var(--text-muted)",
 								marginTop: "4px",
+								marginBottom: "12px",
 							}}
 						>
 							Correspond aux endpoints : <code>{"{apiUrl}/vols"}</code> et{" "}
 							<code>{"{apiUrl}/reservations"}</code>
 						</p>
+						<button
+							type="button"
+							className="btn btn-primary"
+							onClick={onTestApi}
+							style={{ width: "100%", gap: "8px", fontSize: "0.9rem", padding: "10px" }}
+						>
+							<Play size={14} /> Tester l'API sécurisée (/secure-data)
+						</button>
 					</div>
 
 					<div
@@ -219,7 +190,7 @@ export default function DevConsole({
 						}}
 					/>
 
-					{/* Keycloak Simulation */}
+					{/* Keycloak Config */}
 					<h3
 						style={{
 							fontSize: "1.1rem",
@@ -236,48 +207,6 @@ export default function DevConsole({
 					</h3>
 
 					<div className='form-group'>
-						<label className='form-label'>
-							Simuler Authentification Keycloak
-						</label>
-						<div style={{ display: "flex", gap: "10px" }}>
-							<button
-								type='button'
-								className={`btn ${devSettings.keycloakEnabled ? "btn-primary" : "btn-secondary"}`}
-								style={{ flex: 1, padding: "10px" }}
-								onClick={() =>
-									setDevSettings((prev) => ({ ...prev, keycloakEnabled: true }))
-								}
-							>
-								Actif (OIDC Obligatoire)
-							</button>
-							<button
-								type='button'
-								className={`btn ${!devSettings.keycloakEnabled ? "btn-primary" : "btn-secondary"}`}
-								style={{ flex: 1, padding: "10px" }}
-								onClick={() =>
-									setDevSettings((prev) => ({
-										...prev,
-										keycloakEnabled: false,
-									}))
-								}
-							>
-								Inactif (Mode Libre)
-							</button>
-						</div>
-						<p
-							style={{
-								fontSize: "0.75rem",
-								color: "var(--text-muted)",
-								marginTop: "6px",
-							}}
-						>
-							Si actif, les boutons de réservation afficheront un message
-							d'interdiction (403/non authentifié) si aucun jeton n'est
-							configuré.
-						</p>
-					</div>
-
-					<div className='form-group'>
 						<label className='form-label'>URL du Serveur Keycloak</label>
 						<input
 							type='text'
@@ -290,7 +219,6 @@ export default function DevConsole({
 								}))
 							}
 							placeholder='http://localhost:8080'
-							disabled={!devSettings.keycloakEnabled}
 						/>
 					</div>
 
@@ -307,8 +235,8 @@ export default function DevConsole({
 										keycloakRealm: e.target.value,
 									}))
 								}
+								placeholder='ema-s8-microservices'
 								style={{ flex: 1 }}
-								disabled={!devSettings.keycloakEnabled}
 							/>
 							<input
 								type='text'
@@ -322,7 +250,6 @@ export default function DevConsole({
 								}
 								placeholder='aeroflow-web'
 								style={{ flex: 1 }}
-								disabled={!devSettings.keycloakEnabled}
 							/>
 						</div>
 					</div>

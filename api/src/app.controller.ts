@@ -14,6 +14,6 @@ export class AppController {
   @Get('secure-data')
   @UseGuards(JwtAuthGuard)
   getSecureData() {
-    this.appService.getSecureData();
+    return this.appService.getSecureData();
   }
 }

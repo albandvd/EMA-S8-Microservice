@@ -6,95 +6,21 @@ import FlightSearch from "./components/FlightSearch";
 import MyBookings from "./components/MyBookings";
 import DevConsole from "./components/DevConsole";
 
-const MOCK_FLIGHTS = [
-	{
-		id: "FL-101",
-		compagnie: "Air France",
-		vol: "AF-1015",
-		place: "14A",
-		prix: 185,
-		date: "2026-06-25",
-	},
-	{
-		id: "FL-102",
-		compagnie: "Lufthansa",
-		vol: "LH-402",
-		place: "07F",
-		prix: 210,
-		date: "2026-06-26",
-	},
-	{
-		id: "FL-103",
-		compagnie: "Ryanair",
-		vol: "FR-8824",
-		place: "22C",
-		prix: 49,
-		date: "2026-06-28",
-	},
-	{
-		id: "FL-104",
-		compagnie: "EasyJet",
-		vol: "EZ-911",
-		place: "18D",
-		prix: 75,
-		date: "2026-06-25",
-	},
-	{
-		id: "FL-105",
-		compagnie: "Emirates",
-		vol: "EK-074",
-		place: "02A",
-		prix: 690,
-		date: "2026-07-02",
-	},
-	{
-		id: "FL-106",
-		compagnie: "Air France",
-		vol: "AF-1882",
-		place: "10B",
-		prix: 145,
-		date: "2026-06-29",
-	},
-	{
-		id: "FL-107",
-		compagnie: "Lufthansa",
-		vol: "LH-2248",
-		place: "15F",
-		prix: 195,
-		date: "2026-06-30",
-	},
-	{
-		id: "FL-108",
-		compagnie: "Ryanair",
-		vol: "FR-1048",
-		place: "28A",
-		prix: 39,
-		date: "2026-07-05",
-	},
-	{
-		id: "FL-109",
-		compagnie: "Emirates",
-		vol: "EK-101",
-		place: "03D",
-		prix: 750,
-		date: "2026-07-07",
-	},
-];
+// Track Keycloak initialization configuration to avoid concurrent double-initialization in React 18 Strict Mode
+let lastInitializedSettings = "";
 
 export default function App() {
 	const [activeTab, setActiveTab] = useState("dashboard");
 	const [user, setUser] = useState(null);
 	const [simulatedJwt, setSimulatedJwt] = useState("");
-	const [flights, setFlights] = useState(MOCK_FLIGHTS);
+	const [flights, setFlights] = useState([]);
 	const [bookings, setBookings] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [apiLogs, setApiLogs] = useState([]);
 	const [notification, setNotification] = useState(null);
 
 	const [devSettings, setDevSettings] = useState({
-		apiMode: "mock",
 		apiUrl: "http://localhost:3000",
-		keycloakEnabled: false,
 		keycloakUrl: "http://localhost:8080",
 		keycloakRealm: "ema-s8-microservices",
 		keycloakClientId: "aeroflow-web",
@@ -102,57 +28,6 @@ export default function App() {
 
 	const [keycloakInstance, setKeycloakInstance] = useState(null);
 	const keycloakInitialized = useRef(false);
-
-	// Base64URL-safe encoding for JWT mockup
-	const generateSimulatedJwt = () => {
-		const now = Math.floor(Date.now() / 1000);
-		const header = {
-			alg: "RS256",
-			typ: "JWT",
-			kid: "keycloak-s8-key-id-2026",
-		};
-
-		const payload = {
-			exp: now + 3600, // 1 hour expiration
-			iat: now,
-			auth_time: now,
-			jti: "d3b07384-d113-4b6e-ac4f-6f960f898394",
-			iss: `http://localhost:8080/auth/realms/${devSettings.keycloakRealm}`,
-			aud: devSettings.keycloakClientId,
-			sub: "u-59df240-410a",
-			typ: "Bearer",
-			azp: devSettings.keycloakClientId,
-			realm_access: {
-				roles: ["user", "flight-booker"],
-			},
-			resource_access: {
-				"aeroflow-api": {
-					roles: ["book-flights", "view-flights"],
-				},
-			},
-			scope: "openid email profile",
-			email_verified: true,
-			name: "Jean Dupont",
-			preferred_username: "jdupont",
-			given_name: "Jean",
-			family_name: "Dupont",
-			email: "jean.dupont@mines-ales.org",
-			provider: "Keycloak OIDC",
-		};
-
-		const base64UrlEncode = (obj) => {
-			const json = JSON.stringify(obj);
-			const base64 = btoa(unescape(encodeURIComponent(json)));
-			return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-		};
-
-		const headerEnc = base64UrlEncode(header);
-		const payloadEnc = base64UrlEncode(payload);
-		const signature =
-			"c3RhdGljX21vY2tfb3BlbmlkX3NpZ25hdHVyZV9mb3JfcGFzc2luZ190cF9zOF9leGFt";
-
-		return `${headerEnc}.${payloadEnc}.${signature}`;
-	};
 
 	// Toast Notification Helper
 	const showNotification = (message, type = "success") => {
@@ -185,13 +60,13 @@ export default function App() {
 
 	// Initialize Keycloak client (OIDC Step 5)
 	useEffect(() => {
-		if (!devSettings.keycloakEnabled) {
-			setKeycloakInstance(null);
-			keycloakInitialized.current = false;
+		const settingsKey = `${devSettings.keycloakUrl}|${devSettings.keycloakRealm}|${devSettings.keycloakClientId}`;
+		if (keycloakInitialized.current || lastInitializedSettings === settingsKey)
 			return;
-		}
 
-		if (keycloakInitialized.current) return;
+		// Set initialization indicators synchronously to prevent concurrent / duplicate attempts
+		keycloakInitialized.current = true;
+		lastInitializedSettings = settingsKey;
 
 		const keycloak = new Keycloak({
 			url: devSettings.keycloakUrl,
@@ -202,11 +77,12 @@ export default function App() {
 		keycloak
 			.init({
 				onLoad: "check-sso",
+				silentCheckSsoRedirectUri:
+					window.location.origin + "/silent-check-sso.html",
 				checkLoginIframe: false,
 			})
 			.then((authenticated) => {
 				setKeycloakInstance(keycloak);
-				keycloakInitialized.current = true;
 
 				if (authenticated) {
 					setUser({
@@ -233,10 +109,8 @@ export default function App() {
 					"Impossible de joindre le serveur Keycloak. Vérifiez l'instance Docker.",
 					"error",
 				);
-				setDevSettings((prev) => ({ ...prev, keycloakEnabled: false }));
 			});
 	}, [
-		devSettings.keycloakEnabled,
 		devSettings.keycloakUrl,
 		devSettings.keycloakRealm,
 		devSettings.keycloakClientId,
@@ -258,132 +132,99 @@ export default function App() {
 		]);
 	};
 
-	// Handle Login (simulated or real Keycloak redirect)
+	// Handle Login (real Keycloak redirect)
 	const handleLogin = () => {
-		if (devSettings.keycloakEnabled && keycloakInstance) {
+		if (keycloakInstance) {
 			keycloakInstance.login();
-		} else {
-			const jwt = generateSimulatedJwt();
-			setSimulatedJwt(jwt);
-			setUser({
-				name: "Jean Dupont",
-				email: "jean.dupont@mines-ales.org",
-				given_name: "Jean",
-				provider: "Keycloak OIDC",
-				role: "student",
-			});
-			showNotification("Authentification simulée réussie via Keycloak !");
 		}
 	};
 
-	// Handle Logout (simulated or real Keycloak)
+	// Handle Logout (real Keycloak)
 	const handleLogout = () => {
-		if (devSettings.keycloakEnabled && keycloakInstance) {
+		if (keycloakInstance) {
 			keycloakInstance.logout({ redirectUri: window.location.origin });
-		} else {
-			setUser(null);
-			setSimulatedJwt("");
-			showNotification("Session déconnectée avec succès.", "info");
 		}
 	};
 
 	// API actions: Fetch Flights
 	const loadFlights = async () => {
 		setIsLoading(true);
+		const url = `${devSettings.apiUrl}/flights`;
+		const headers = {};
+		if (simulatedJwt) {
+			headers["Authorization"] = `Bearer ${simulatedJwt}`;
+		}
 
-		if (devSettings.apiMode === "live") {
-			const url = `${devSettings.apiUrl}/secure-data`;
-			const headers = {};
-			if (simulatedJwt) {
-				headers["Authorization"] = `Bearer ${simulatedJwt}`;
-			}
+		try {
+			const response = await fetch(url, { headers });
+			let data = [];
 
-			try {
-				const response = await fetch(url, { headers });
-				let data = [];
-
-				if (response.ok) {
-					const contentType = response.headers.get("content-type");
-					if (contentType && contentType.includes("application/json")) {
-						data = await response.json();
-					} else {
-						// Text or XML fallback handling
-						const text = await response.text();
-						data = text; // or parse XML if needed
-					}
-
-					logApiRequest(
-						"GET",
-						url,
-						headers,
-						response.status,
-						response.statusText,
-						data,
-					);
-
-					if (Array.isArray(data)) {
-						setFlights(data);
-					}
-					showNotification(
-						"Vols actualisés avec succès depuis le serveur REST !",
-					);
+			if (response.ok) {
+				const contentType = response.headers.get("content-type");
+				if (contentType && contentType.includes("application/json")) {
+					data = await response.json();
 				} else {
-					const errText = await response.text();
-					logApiRequest(
-						"GET",
-						url,
-						headers,
-						response.status,
-						response.statusText,
-						errText,
-					);
-					showNotification(
-						`Erreur REST: ${response.status} ${response.statusText}`,
-						"error",
-					);
-					// Fallback
-					setFlights(MOCK_FLIGHTS);
+					const text = await response.text();
+					data = text;
 				}
-			} catch (err) {
+
 				logApiRequest(
 					"GET",
 					url,
 					headers,
-					0,
-					"Connection Failed (CORS/Network)",
-					err.message,
+					response.status,
+					response.statusText,
+					data,
+				);
+
+				if (Array.isArray(data)) {
+					setFlights(data);
+				}
+				showNotification(
+					"Vols actualisés avec succès depuis le serveur REST !",
+				);
+			} else {
+				const errText = await response.text();
+				logApiRequest(
+					"GET",
+					url,
+					headers,
+					response.status,
+					response.statusText,
+					errText,
 				);
 				showNotification(
-					"Impossible de joindre le serveur REST. Mode simulé activé en fallback.",
+					`Erreur REST: ${response.status} ${response.statusText}`,
 					"error",
 				);
-				setFlights(MOCK_FLIGHTS);
+				setFlights([]);
 			}
-		} else {
-			// Mock Mode
-			await new Promise((resolve) => setTimeout(resolve, 600));
-			logApiRequest("GET", "/vols (Simulé)", null, 200, "OK", MOCK_FLIGHTS);
-			setFlights(MOCK_FLIGHTS);
-			showNotification("Vols simulés actualisés.");
+		} catch (err) {
+			logApiRequest(
+				"GET",
+				url,
+				headers,
+				0,
+				"Connection Failed (CORS/Network)",
+				err.message,
+			);
+			showNotification("Impossible de joindre le serveur REST.", "error");
+			setFlights([]);
 		}
 
 		setIsLoading(false);
 	};
 
-	// Trigger loading flights on startup/change mode
+	// Trigger loading flights on startup or when JWT changes
 	useEffect(() => {
 		loadFlights();
-	}, [devSettings.apiMode, devSettings.apiUrl]);
+	}, [devSettings.apiUrl, simulatedJwt]);
 
 	// Book a flight
 	const handleBookFlight = async (flight) => {
-		// Check Keycloak rules
-		if (devSettings.keycloakEnabled && !user) {
-			logApiRequest("POST", `/reservations (Rejeté)`, null, 403, "Forbidden", {
-				error: "Accès refusé. Jeton Bearer manquant ou invalide.",
-			});
+		if (!user) {
 			showNotification(
-				"Réservation refusée: Authentification Keycloak OIDC requise (HTTP 403) !",
+				"Réservation refusée: Authentification requise !",
 				"error",
 			);
 			return;
@@ -397,146 +238,155 @@ export default function App() {
 			place: flight.place,
 			prix: flight.prix,
 			date: flight.date,
-			username: user ? user.name : "Anonyme",
+			username: user.name,
 			bookingDate: new Date().toISOString(),
 		};
 
-		if (devSettings.apiMode === "live") {
-			const url = `${devSettings.apiUrl}/reservations`;
-			const headers = {
-				"Content-Type": "application/json",
-			};
-			if (simulatedJwt) {
-				headers["Authorization"] = `Bearer ${simulatedJwt}`;
-			}
+		const url = `${devSettings.apiUrl}/reservations`;
+		const headers = {
+			"Content-Type": "application/json",
+		};
+		if (simulatedJwt) {
+			headers["Authorization"] = `Bearer ${simulatedJwt}`;
+		}
 
-			try {
-				const response = await fetch(url, {
-					method: "POST",
-					headers,
-					body: JSON.stringify(payload),
-				});
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers,
+				body: JSON.stringify(payload),
+			});
 
-				const responseData = await response.json().catch(() => null);
-				logApiRequest(
-					"POST",
-					url,
-					headers,
-					response.status,
-					response.statusText,
-					responseData || payload,
-				);
-
-				if (response.ok) {
-					setBookings((prev) => [
-						...prev,
-						{ ...flight, authMode: "Bearer", ref: bookingRef },
-					]);
-					showNotification("Vol réservé avec succès sur le serveur backend !");
-				} else {
-					showNotification(
-						`Erreur de réservation REST: ${response.status}`,
-						"error",
-					);
-				}
-			} catch (err) {
-				logApiRequest(
-					"POST",
-					url,
-					headers,
-					0,
-					"Connection Failed (CORS/Network)",
-					err.message,
-				);
-				showNotification(
-					"Erreur de connexion. Réservation simulée localement.",
-					"warning",
-				);
-				setBookings((prev) => [
-					...prev,
-					{ ...flight, authMode: user ? "Bearer" : "Mock", ref: bookingRef },
-				]);
-			}
-		} else {
-			// Mock Mode
+			const responseData = await response.json().catch(() => null);
 			logApiRequest(
 				"POST",
-				"/reservations (Simulé)",
-				null,
-				201,
-				"Created",
-				payload,
+				url,
+				headers,
+				response.status,
+				response.statusText,
+				responseData || payload,
 			);
-			setBookings((prev) => [
-				...prev,
-				{ ...flight, authMode: user ? "Bearer" : "Mock", ref: bookingRef },
-			]);
-			showNotification(`Vol ${flight.vol} réservé ! Siège : ${flight.place}`);
+
+			if (response.ok) {
+				setBookings((prev) => [
+					...prev,
+					{ ...flight, authMode: "Bearer", ref: bookingRef },
+				]);
+				showNotification("Vol réservé avec succès sur le serveur backend !");
+			} else {
+				showNotification(
+					`Erreur de réservation REST: ${response.status}`,
+					"error",
+				);
+			}
+		} catch (err) {
+			logApiRequest(
+				"POST",
+				url,
+				headers,
+				0,
+				"Connection Failed (CORS/Network)",
+				err.message,
+			);
+			showNotification(
+				"Erreur de connexion. Impossible d'enregistrer la réservation.",
+				"error",
+			);
 		}
 	};
 
 	// Cancel booking
 	const handleCancelBooking = async (bookingId) => {
-		const flight = bookings.find((b) => b.id === bookingId);
+		const url = `${devSettings.apiUrl}/reservations/${bookingId}`;
+		const headers = {};
+		if (simulatedJwt) {
+			headers["Authorization"] = `Bearer ${simulatedJwt}`;
+		}
 
-		if (devSettings.apiMode === "live") {
-			const url = `${devSettings.apiUrl}/reservations/${bookingId}`;
-			const headers = {};
-			if (simulatedJwt) {
-				headers["Authorization"] = `Bearer ${simulatedJwt}`;
-			}
+		try {
+			const response = await fetch(url, {
+				method: "DELETE",
+				headers,
+			});
 
-			try {
-				const response = await fetch(url, {
-					method: "DELETE",
-					headers,
-				});
-
-				logApiRequest(
-					"DELETE",
-					url,
-					headers,
-					response.status,
-					response.statusText,
-					{ message: `Réservation ${bookingId} annulée` },
-				);
-
-				if (response.ok) {
-					setBookings((prev) => prev.filter((b) => b.id !== bookingId));
-					showNotification("Réservation annulée sur le serveur REST.");
-				} else {
-					showNotification(
-						`Erreur d'annulation REST: ${response.status}`,
-						"error",
-					);
-				}
-			} catch (err) {
-				logApiRequest(
-					"DELETE",
-					url,
-					headers,
-					0,
-					"Connection Failed (CORS/Network)",
-					err.message,
-				);
-				showNotification(
-					"Erreur de réseau. Annulation simulée localement.",
-					"warning",
-				);
-				setBookings((prev) => prev.filter((b) => b.id !== bookingId));
-			}
-		} else {
-			// Mock Mode
 			logApiRequest(
 				"DELETE",
-				`/reservations/${bookingId} (Simulé)`,
-				null,
-				200,
-				"OK",
-				{ id: bookingId },
+				url,
+				headers,
+				response.status,
+				response.statusText,
+				{ message: `Réservation ${bookingId} annulée` },
 			);
-			setBookings((prev) => prev.filter((b) => b.id !== bookingId));
-			showNotification("Réservation annulée.");
+
+			if (response.ok) {
+				setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+				showNotification("Réservation annulée sur le serveur REST.");
+			} else {
+				showNotification(
+					`Erreur d'annulation REST: ${response.status}`,
+					"error",
+				);
+			}
+		} catch (err) {
+			logApiRequest(
+				"DELETE",
+				url,
+				headers,
+				0,
+				"Connection Failed (CORS/Network)",
+				err.message,
+			);
+			showNotification("Erreur de réseau lors de l'annulation.", "error");
+		}
+	};
+
+	const testSecureApi = async () => {
+		const url = `${devSettings.apiUrl}/secure-data`;
+		const headers = {};
+		if (simulatedJwt) {
+			headers["Authorization"] = `Bearer ${simulatedJwt}`;
+		}
+
+		try {
+			const response = await fetch(url, { headers });
+			const text = await response.text();
+			let data = text;
+			try {
+				data = JSON.parse(text);
+			} catch {
+				// Keep as text if not valid JSON
+			}
+
+			logApiRequest(
+				"GET (Test)",
+				url,
+				headers,
+				response.status,
+				response.statusText,
+				data,
+			);
+
+			if (response.ok) {
+				showNotification("Test API réussi : accès autorisé (200 OK) !", "success");
+			} else {
+				showNotification(
+					`Test API échoué : ${response.status} ${response.statusText}`,
+					"error",
+				);
+			}
+		} catch (err) {
+			logApiRequest(
+				"GET (Test)",
+				url,
+				headers,
+				0,
+				"Connection Failed (CORS/Network)",
+				err.message,
+			);
+			showNotification(
+				"Test API échoué : Impossible de joindre le serveur REST.",
+				"error",
+			);
 		}
 	};
 
@@ -632,6 +482,7 @@ export default function App() {
 						simulatedJwt={simulatedJwt}
 						apiLogs={apiLogs}
 						onClearLogs={() => setApiLogs([])}
+						onTestApi={testSecureApi}
 					/>
 				)}
 			</main>

@@ -184,7 +184,7 @@ export default function Navbar({ activeTab, setActiveTab, user, onLogin, onLogou
               onClick={onLogin}
               style={{ padding: '8px 12px', fontSize: '0.85rem', width: '100%', gap: '6px' }}
             >
-              <LogIn size={14} /> Connexion OIDC (Simulé)
+              <LogIn size={14} /> Connexion Keycloak
             </button>
 
             <a 

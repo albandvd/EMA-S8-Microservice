@@ -2,15 +2,14 @@ import React from 'react';
 import { Shield, Key, Database, RefreshCw, Layers, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 
 export default function Dashboard({ user, activeBookingsCount, devSettings, mockFlightsCount, onLogin, onLogout }) {
-  // Determine connection health status
-  const apiStatus = devSettings.apiMode === 'live' ? 'En ligne' : 'Simulé';
-  const apiColor = devSettings.apiMode === 'live' ? 'var(--status-success)' : 'var(--status-info)';
+  const apiStatus = 'En ligne';
+  const apiColor = 'var(--status-success)';
   
   const steps = [
-    { num: '1', title: 'API REST Backend', desc: 'Serveur JAX-RS / Jersey ou Spring Boot exposant les endpoints de vols.', status: devSettings.apiMode === 'live' ? 'configured' : 'mocked' },
+    { num: '1', title: 'API REST Backend', desc: 'Serveur NestJS exposant les endpoints de vols et réservations.', status: 'configured' },
     { num: '2', title: 'SPA React (Ce Front)', desc: 'Interface web moderne de recherche et réservation de vols.', status: 'configured' },
-    { num: '3', title: 'Délégation Google / OAuth', desc: 'Récupération des informations de profil utilisateur via OAuth 2.1.', status: user && user.provider === 'Google' ? 'configured' : 'todo' },
-    { num: '4', title: 'Keycloak - Sécurité Backend', desc: 'Protection de l\'API REST avec validation du token JWT Keycloak.', status: devSettings.keycloakEnabled ? 'configured' : 'todo' },
+    { num: '3', title: 'Délégation Discord / OAuth', desc: 'Récupération des informations de profil utilisateur via OAuth 2.0 Discord.', status: user && user.provider === 'Discord' ? 'configured' : 'todo' },
+    { num: '4', title: 'Keycloak - Sécurité Backend', desc: 'Protection de l\'API REST avec validation du token JWT Keycloak.', status: 'configured' },
     { num: '5', title: 'Keycloak - Sécurité Frontend', desc: 'Authentification OIDC sur le client React et obtention du JWT.', status: user && user.provider === 'Keycloak OIDC' ? 'configured' : 'todo' },
     { num: '7-8', title: 'OpenAPI & Gravitee API Gateway', desc: 'Définition du contrat Swagger et routage sécurisé de l\'API.', status: 'todo' }
   ];

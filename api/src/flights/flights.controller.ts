@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Body, Param, Delete, HttpCode, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Delete, HttpCode, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 import { FlightsService } from './flights.service';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('flights')
 export class FlightsController {
@@ -13,6 +14,7 @@ export class FlightsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(
     @Query('airline_id') airlineId?: string,
     @Query('date') date?: string,
