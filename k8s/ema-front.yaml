@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ema-front-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - host: ema-front.infres.fr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ema-front-service
+                port:
+                  number: 5173
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ema-front-service
+  labels:
+    run: ema-front
+spec:
+  selector:
+    app: ema-front
+  ports:
+    - protocol: TCP
+      port: 5173
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ema-front
+  labels:
+    app: ema-front
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ema-front
+  template:
+    metadata:
+      labels:
+        app: ema-front
+    spec:
+      containers:
+        - name: ema-front
+          image: registry.infres.fr/ema-front
+          imagePullPolicy: Always
+          command: ["pnpm", "run", "preview"]
+          ports:
+            - containerPort: 5173
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"

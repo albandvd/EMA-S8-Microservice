@@ -9,7 +9,7 @@ COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
 
-COPY tsconfig.json tsconfig.build.json ./
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 COPY ./src ./src
 
 RUN pnpm run build
