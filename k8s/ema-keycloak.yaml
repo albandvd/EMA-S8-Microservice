@@ -1,0 +1,69 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ema-keycloak-ingress
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - host: ema-keycloak.infres.fr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ema-keycloak-service
+                port:
+                  number: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ema-keycloak-service
+  labels:
+    run: ema-keycloak
+spec:
+  selector:
+    app: ema-keycloak
+  ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ema-keycloak
+  labels:
+    app: ema-keycloak
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ema-keycloak
+  template:
+    metadata:
+      labels:
+        app: ema-keycloak
+    spec:
+      containers:
+        - name: ema-keycloak
+          image: registry.infres.fr/ema-keycloak
+          imagePullPolicy: Always
+          command: ["/opt/keycloak/bin/kc.sh", "start-dev"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: "admin"
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: "admin"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
