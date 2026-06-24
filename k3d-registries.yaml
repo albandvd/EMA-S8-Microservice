@@ -1,0 +1,4 @@
+mirrors:
+  "registry.infres.fr":
+    endpoint:
+      - "http://registry.infres.fr"
