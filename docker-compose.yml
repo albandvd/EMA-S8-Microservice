@@ -1,7 +1,8 @@
-version: '3.8'
+version: '3.5'
 
 services:
   keycloak:
+    image: registry.infres.fr/ema-keycloak
     build:
       context: ./keycloak
       dockerfile: Dockerfile
@@ -17,18 +18,23 @@ services:
       - appnet
 
   api:
+    image: registry.infres.fr/ema-api
     build:
       context: ./api
       dockerfile: Dockerfile
     container_name: ema_api
     ports:
       - "3000:3000"
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ema-s8-microservices
     depends_on:
       - keycloak
     networks:
       - appnet
 
   front:
+    image: registry.infres.fr/ema-front
     build:
       context: ./front
       dockerfile: Dockerfile
